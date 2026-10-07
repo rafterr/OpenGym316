@@ -13,9 +13,17 @@ namespace PR.OpenGym.API.Data
         public DbSet<Branch> Branches { get; set; }
         public DbSet<Membership> Memberships { get; set; }
         public DbSet<AssociateMembership> AssociateMemberships { get; set; }
+        public DbSet<Receipt> Receipts { get; set; }
         public PROpenGymWebContext(DbContextOptions<PROpenGymWebContext> options)
             : base(options)
         {
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Receipt>().HasIndex(r => r.PaymentId).IsUnique();
+            modelBuilder.Entity<Receipt>().HasIndex(r => r.AssociateId);
         }
     }
 

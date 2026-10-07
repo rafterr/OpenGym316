@@ -16,6 +16,7 @@ public class PROpenGymWebContext : IdentityDbContext<PROpenGymWebUser>
     public DbSet<Branch> Branches { get; set; }
     public DbSet<Membership> Memberships { get; set; }
     public DbSet<AssociateMembership> AssociateMemberships { get; set; }
+    public DbSet<Receipt> Receipts { get; set; }
     public PROpenGymWebContext(DbContextOptions<PROpenGymWebContext> options)
         : base(options)
     {

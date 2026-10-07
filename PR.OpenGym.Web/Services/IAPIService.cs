@@ -36,7 +36,12 @@ namespace PR.OpenGym.Web.Services
         Task<bool> DeleteMembership(int mebershipId);
 
 
-        Task<bool> CreatePayment(CreatePaymentDTO createPaymentDTO);
+        Task<PaymentResultDTO?> CreatePayment(CreatePaymentDTO createPaymentDTO);
+
+        Task<Receipt?> GetReceipt(int receiptId);
+        Task<IEnumerable<Receipt>> GetReceiptsByAssociateId(int associateId);
+        Task<IEnumerable<Receipt>> GetReceipts(DateTime from, DateTime to);
+        Task<bool> CancelReceipt(int receiptId, string? reason);
 
         Task<bool> DeleteAssociate(int associateId);
     }

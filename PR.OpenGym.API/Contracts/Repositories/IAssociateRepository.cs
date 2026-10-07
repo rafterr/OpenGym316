@@ -6,6 +6,7 @@ namespace PR.OpenGym.API.Contracts.Repositories
     {
         new Task<IEnumerable<Associate>> GetAllAsync();
         Task<IEnumerable<Associate>> GetByNameAsync(string associateName);
+        Task<Associate?> GetWithMembershipAndBranchAsync(int associateId);
         Task AddCheckIn(CheckIn checkIn);
         Task<IEnumerable<CheckIn>> GetCheckIns(DateTime dateTime);
         Task<IEnumerable<CheckIn>> GetCheckIns(int associateId);

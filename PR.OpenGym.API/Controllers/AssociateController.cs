@@ -14,16 +14,19 @@ namespace PR.OpenGym.API.Controllers
         private readonly IAssociateService _associateService;
         private readonly IAssociateDetailsService _associateDetailsService;
         private readonly IImageStorageService _imageStorageService;
+        private readonly IPaymentService _paymentService;
         private readonly IMapper _mapper;
 
         public AssociateController(
             IAssociateService associateService,
             IImageStorageService imageStorageService,
+            IPaymentService paymentService,
             IMapper mapper
             )
         {
             _associateService = associateService;
             _imageStorageService = imageStorageService;
+            _paymentService = paymentService;
             _mapper = mapper;
         }
 
@@ -93,13 +96,16 @@ namespace PR.OpenGym.API.Controllers
 
                 )
             {
-                var associate = await _associateService.PostAsync(associateDTO);
+                // con metodo de pago se cobra la primera membresia y se genera el recibo
+                var associate = associateDTO.PaymentMethod != null
+                    ? await _paymentService.CreateAssociateWithInitialPaymentAsync(associateDTO)
+                    : await _associateService.PostAsync(associateDTO);
                 if (associate.Id > 0)
                 {
                     //var imgPath = await _imageStorageService.SaveImageDocumentManagement(associate.Id, model.ImgFile);
                     //associate.ImgPath = imgPath;
                     //await _associateService.PutAsync(associate);
-                    return Ok(associate);
+                    return Ok(_mapper.Map<AssociateGetDTO>(associate));
                 }
                 return Problem("An error ocurred trying to Post Associate in controller PostAssociate");
             }

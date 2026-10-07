@@ -23,9 +23,6 @@
             <p class="display-6" id="lblName">-</p>
             <p class="display-6" id="lblAge">-</p>
             <p class="display-6" id="lblMembershipStatus">-</p>
-            
-            <p id="lblVencimiento"></p>
-            
 
             <div class="input-group mb-3">
                 <div class="form-floating">
@@ -41,6 +38,13 @@
                     <input type="date" class="form-control" value="@Model.StartDate.ToString("yyyy-MM-dd")" id="txtStartDate" />
                     <label for="floatingSelect">Fecha de Inicio</label>
                 </div>
+            </div>
+            <div class="form-floating mb-3">
+                <select class="form-select" id="selectPaymentMethod">
+                    <option value="@((int)PaymentMethod.Cash)" selected>Efectivo</option>
+                    <option value="@((int)PaymentMethod.Transfer)">Transferencia</option>
+                </select>
+                <label for="selectPaymentMethod">Metodo de pago</label>
             </div>
             <button class="btn w-100 btn-success fs-4" onclick="paySubscription()"><i class="bi bi-check-circle"></i> Pagar</button>
         </div>
@@ -93,16 +97,24 @@
                     body: JSON.stringify({
                         associateId: _associateSelected.id,
                         membershipId: $("#selectMemberships").val(),
-                        startDate: $("#txtStartDate").val()
+                        startDate: $("#txtStartDate").val(),
+                        paymentMethod: parseInt($("#selectPaymentMethod").val())
                     })
                 })
                     .then(data => data.json())
                     .then(result => {
-                        if (result) {
+                        if (result.success) {
                             Swal.fire({
-                                title: "Gracias",
-                                icon: "success",
+                                title: "Pago registrado",
+                                html: "Recibo <b>" + result.folio + "</b>" +
+                                    (result.terminalUpdated ? "" : "<br><span class='text-danger'>No se pudo actualizar la vigencia en la terminal, actualice al socio desde Editar.</span>"),
+                                icon: result.terminalUpdated ? "success" : "warning",
+                                showCancelButton: true,
+                                confirmButtonText: "Imprimir recibo",
+                                cancelButtonText: "Cerrar",
                                 confirmButtonColor: "#0d6efd"
+                            }).then(r => {
+                                if (r.isConfirmed) window.open("/Receipt/Print/" + result.receiptId + "?auto=true", "_blank");
                             });
                         } else {
                             Swal.fire({
@@ -147,8 +159,6 @@
             $("#lblName").text(_associateSelected.firstName + " " + _associateSelected.lastName);
             $("#lblAge").text((_associateSelected.age || "-") + " Años");
             $("#lblMembershipStatus").text(_associateSelected.status == "1" ? "Activo" : "No Pagada");
-            $("#lblVencimiento").text("Fecha vencimiento: " + new Intl.DateTimeFormat('es-MX').format(new Date(_associateSelected.associateMembership.to)));
-            
         }
 
         _txtAssociate.on('keyup', load);

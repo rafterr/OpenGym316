@@ -18,6 +18,18 @@
         Cancelled,
         Active,
         Inactive,
-        LatePayment       
+        LatePayment
+    }
+
+    public enum PaymentMethod
+    {
+        Cash,
+        Transfer
+    }
+
+    public enum ReceiptStatus
+    {
+        Active,
+        Cancelled
     }
 }

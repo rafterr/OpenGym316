@@ -119,6 +119,12 @@ namespace PR.OpenGym.Web.Services
                     multipartComtent.Add(new StringContent(associate.AssociateMembership.From.Value.ToString("s")), "AssociateMembership.From");
                 }
 
+                // cobro de la primera membresia
+                if (associate.PaymentMethod != null)
+                    multipartComtent.Add(new StringContent(((int)associate.PaymentMethod).ToString()), "PaymentMethod");
+                if (associate.IssuedBy != null)
+                    multipartComtent.Add(new StringContent(associate.IssuedBy), "IssuedBy");
+
                 //multipartComtent.Add(new StringContent(DateTime.UtcNow.ToString()), "CreatedOn");
                 //multipartComtent.Add(new StringContent(DateTime.UtcNow.ToString()), "ModifiedOn");
 
@@ -244,11 +250,50 @@ namespace PR.OpenGym.Web.Services
         }
 
 
-        public async Task<bool> CreatePayment(CreatePaymentDTO createPaymentDTO)
+        public async Task<PaymentResultDTO?> CreatePayment(CreatePaymentDTO createPaymentDTO)
         {
             var resource = $"Payment/PayMembership";
             var content = new StringContent(JsonConvert.SerializeObject(createPaymentDTO), System.Text.Encoding.UTF8, "application/json");
             var response = await _httpClient.PostAsync(resource, content);
+            if (!response.IsSuccessStatusCode)
+                return null;
+            var body = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<PaymentResultDTO>(body);
+        }
+
+        public async Task<Receipt?> GetReceipt(int receiptId)
+        {
+            var resource = "Receipt/" + receiptId;
+            var response = await _httpClient.GetAsync(resource);
+            if (!response.IsSuccessStatusCode)
+                return null;
+            var body = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<Receipt>(body);
+        }
+
+        public async Task<IEnumerable<Receipt>> GetReceiptsByAssociateId(int associateId)
+        {
+            var resource = "Receipt/ByAssociate/" + associateId;
+            var response = await _httpClient.GetAsync(resource);
+            var body = await response.Content.ReadAsStringAsync();
+            var receipts = response.IsSuccessStatusCode ? JsonConvert.DeserializeObject<IEnumerable<Receipt>>(body) : null;
+            return receipts ?? new List<Receipt>();
+        }
+
+        public async Task<IEnumerable<Receipt>> GetReceipts(DateTime from, DateTime to)
+        {
+            var resource = $"Receipt?from={from:yyyy-MM-dd}&to={to:yyyy-MM-dd}";
+            var response = await _httpClient.GetAsync(resource);
+            var body = await response.Content.ReadAsStringAsync();
+            var receipts = response.IsSuccessStatusCode ? JsonConvert.DeserializeObject<IEnumerable<Receipt>>(body) : null;
+            return receipts ?? new List<Receipt>();
+        }
+
+        public async Task<bool> CancelReceipt(int receiptId, string? reason)
+        {
+            var resource = $"Receipt/{receiptId}/Cancel";
+            var content = new StringContent(JsonConvert.SerializeObject(new CancelReceiptDTO() { Reason = reason }), System.Text.Encoding.UTF8, "application/json");
+            var response = await _httpClient.PutAsync(resource, content);
             return response.IsSuccessStatusCode;
         }
 

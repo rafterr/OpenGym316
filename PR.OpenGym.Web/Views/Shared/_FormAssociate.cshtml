@@ -38,6 +38,18 @@
             <label asp-for="MembershipId"></label>
         </div>
 
+        @if (Model.Associate?.Id == null)
+        {
+            @* en el alta se cobra la primera membresia *@
+            <div class="form-floating mb-2">
+                <select asp-for="PaymentMethod" class="form-select">
+                    <option value="@PaymentMethod.Cash">Efectivo</option>
+                    <option value="@PaymentMethod.Transfer">Transferencia</option>
+                </select>
+                <label asp-for="PaymentMethod"></label>
+            </div>
+        }
+
         <div class="form-floating mb-2">
             <select asp-for="Associate.BranchId" class="form-select" readonly>
                 <option value="1" selected>Rio Mayo</option>

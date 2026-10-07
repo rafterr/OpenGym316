@@ -1,0 +1,130 @@
+﻿@model Receipt
+@{
+    Layout = null;
+    var culture = ReceiptDisplayExtensions.MexicoCulture;
+    bool isCancelled = Model.Status == ReceiptStatus.Cancelled;
+    bool autoPrint = ViewBag.AutoPrint == true;
+}
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Recibo @Model.Folio</title>
+    <link href="~/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <style>
+        /* Ticket termico 80mm: area imprimible aprox. 72mm */
+        @@page {
+            size: 80mm auto;
+            margin: 0;
+        }
+
+        body {
+            background: #f5f5f5;
+        }
+
+        .ticket {
+            width: 72mm;
+            margin: 16px auto;
+            padding: 4mm 2mm;
+            background: #fff;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 12px;
+            line-height: 1.35;
+            color: #000;
+        }
+
+        .ticket .center { text-align: center; }
+        .ticket .right { text-align: right; }
+        .ticket .bold { font-weight: bold; }
+        .ticket .title { font-size: 15px; font-weight: bold; }
+        .ticket .total { font-size: 16px; font-weight: bold; }
+        .ticket hr { border: 0; border-top: 1px dashed #000; margin: 6px 0; opacity: 1; }
+        .ticket .row-line { display: flex; justify-content: space-between; gap: 6px; }
+        .ticket .row-line span:last-child { text-align: right; }
+        .ticket .cancelled { border: 2px solid #000; font-size: 16px; font-weight: bold; text-align: center; padding: 2px; margin: 6px 0; }
+
+        .actions { width: 72mm; margin: 0 auto 16px; }
+
+        @@media print {
+            body { background: #fff; }
+            .ticket { margin: 0; width: 72mm; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    @if (TempData["ReceiptCancelResult"] is bool cancelResult)
+    {
+        <div class="alert @(cancelResult ? "alert-success" : "alert-danger") no-print text-center m-2">
+            @(cancelResult ? "Recibo cancelado" : "No se pudo cancelar el recibo")
+        </div>
+    }
+
+    <div class="ticket">
+        <div class="center">
+            <div class="title">@(Model.BranchName ?? "3:16 Fitness")</div>
+            @if (!string.IsNullOrWhiteSpace(Model.BranchAddress))
+            {
+                <div>@Model.BranchAddress</div>
+            }
+        </div>
+        <hr />
+        <div class="center bold">RECIBO DE PAGO</div>
+        <div class="row-line"><span>Folio:</span><span class="bold">@Model.Folio</span></div>
+        <div class="row-line"><span>Fecha:</span><span>@Model.CreatedOn.ToString("dd/MM/yyyy hh:mm tt", culture)</span></div>
+        @if (isCancelled)
+        {
+            <div class="cancelled">*** CANCELADO ***</div>
+        }
+        <hr />
+        <div class="row-line"><span>No. socio:</span><span>@Model.AssociateId</span></div>
+        <div>Socio:</div>
+        <div class="bold">@Model.AssociateName</div>
+        <hr />
+        <div>Concepto:</div>
+        <div class="bold">Membresia @Model.MembershipName</div>
+        <div class="row-line"><span>Vigencia del:</span><span>@Model.PeriodFrom.ToString("dd/MM/yyyy", culture)</span></div>
+        <div class="row-line"><span>al:</span><span>@Model.PeriodTo.ToString("dd/MM/yyyy", culture)</span></div>
+        <div class="row-line"><span>Metodo de pago:</span><span>@Model.PaymentMethod.ToDisplay()</span></div>
+        <hr />
+        <div class="row-line total"><span>TOTAL</span><span>@Model.Amount.ToMoney()</span></div>
+        <hr />
+        @if (!string.IsNullOrWhiteSpace(Model.IssuedBy))
+        {
+            <div class="row-line"><span>Atendio:</span><span>@Model.IssuedBy</span></div>
+        }
+        @if (isCancelled && !string.IsNullOrWhiteSpace(Model.CancelReason))
+        {
+            <div>Motivo cancelacion: @Model.CancelReason</div>
+        }
+        <div class="center mt-2">¡Gracias por su pago!</div>
+    </div>
+
+    <div class="actions no-print">
+        <button class="btn btn-primary w-100 mb-2" onclick="window.print()">Imprimir</button>
+        <button class="btn btn-outline-secondary w-100 mb-2" onclick="window.close()">Cerrar</button>
+
+        @if (!isCancelled && User.IsInRole(Constants.ADMIN))
+        {
+            <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" onsubmit="return confirmCancel(this)">
+                <input type="hidden" name="reason" />
+                <button type="submit" class="btn btn-outline-danger w-100">Cancelar recibo</button>
+            </form>
+        }
+    </div>
+
+    <script>
+        function confirmCancel(form) {
+            var reason = prompt("Motivo de la cancelacion:");
+            if (!reason) return false;
+            form.querySelector("input[name='reason']").value = reason;
+            return true;
+        }
+        @if (autoPrint)
+        {
+            <text>window.addEventListener("load", function () { window.print(); });</text>
+        }
+    </script>
+</body>
+</html>

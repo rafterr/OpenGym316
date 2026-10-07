@@ -119,8 +119,10 @@
                 <table class="table" id="tblPagos">
                     <thead>
                         <tr>
+                            <th>Folio</th>
                             <th>Fecha</th>
                             <th>Monto</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -331,11 +333,28 @@
                 // use TempData from Controller AssociateController on Action Create
                 let shouldShow = @(TempData["CreateActionResult"] != null && TempData["CreateActionAssociateName"] != null ? TempData["CreateActionResult"].ToString().ToLower() : "false");
 
+                let receiptId = @(TempData["CreateActionReceiptId"]?.ToString() ?? "null");
+                let terminalError = @((TempData["CreateActionTerminalError"] as bool? ?? false).ToString().ToLower());
+
                 if (shouldShow) {
-                    Toast.fire({
-                        icon: 'success',
-                        title: 'Se agrego correctamente @TempData["CreateActionAssociateName"]'
-                    });
+                    if (receiptId) {
+                        Swal.fire({
+                            title: 'Se agrego correctamente @TempData["CreateActionAssociateName"]',
+                            html: terminalError ? "<span class='text-danger'>El socio y su pago se guardaron, pero no se pudo registrar en la terminal. Actualice al socio desde Editar.</span>" : "Se registro el pago de la primera membresia",
+                            icon: terminalError ? 'warning' : 'success',
+                            showCancelButton: true,
+                            confirmButtonText: 'Imprimir recibo',
+                            cancelButtonText: 'Cerrar',
+                            confirmButtonColor: '#0d6efd'
+                        }).then(r => {
+                            if (r.isConfirmed) window.open("/Receipt/Print/" + receiptId + "?auto=true", "_blank");
+                        });
+                    } else {
+                        Toast.fire({
+                            icon: terminalError ? 'warning' : 'success',
+                            title: 'Se agrego correctamente @TempData["CreateActionAssociateName"]'
+                        });
+                    }
                 }
             }
 
@@ -343,27 +362,34 @@
                 if (!_SELECTED_ID) return;
                 var tblPagos = $('#tblPagos');
                 var tableBody = tblPagos.children('tbody');
-                tableBody.innerHTML = "";
+                tableBody.empty();
                 _paymentsModal.modal('show');
 
-                fetch("/Payment/GetPaymentsByAssociateId/" + _SELECTED_ID, {
-                    method: "GET"
-                })
-                    .then(data => data.json())
-                    .then(result => {
-                        debugger;
-                        var template = "";
-                        var items = [];
-                        result.forEach(e => {
-                            template += `<tr>
-                                            <td>${(e.createdOn?.split("T")[0] ?? "-")}</td>
-                                            <td>$${(e.amount ?? 0)}</td>
-                                         </tr>`;
-                            items.push(template);
-                        });
-                        tableBody.html(items.join(""));
+                // pagos anteriores a los recibos se muestran sin folio
+                Promise.all([
+                    fetch("/Payment/GetPaymentsByAssociateId/" + _SELECTED_ID).then(data => data.json()),
+                    fetch("/Receipt/ByAssociate/" + _SELECTED_ID).then(data => data.json())
+                ]).then(([payments, receipts]) => {
+                    if (!payments.length) {
+                        tableBody.html(`<tr><td colspan="4" class="text-muted">Sin pagos</td></tr>`);
+                        return;
                     }
-                    );
+                    var receiptByPayment = {};
+                    receipts.forEach(r => receiptByPayment[r.paymentId] = r);
+                    var items = payments
+                        .sort((a, b) => b.id - a.id)
+                        .map(e => {
+                            var receipt = receiptByPayment[e.id];
+                            var cancelled = receipt && receipt.status == 1;
+                            return `<tr class="${cancelled ? "text-decoration-line-through text-muted" : ""}">
+                                        <td>${receipt ? receipt.folio : "-"}</td>
+                                        <td>${(e.createdOn?.split("T")[0] ?? "-")}</td>
+                                        <td>$${Number(e.amount ?? 0).toFixed(2)}</td>
+                                        <td>${receipt ? `<a class="btn btn-sm btn-outline-secondary" href="/Receipt/Print/${receipt.id}" target="_blank"><i class="bi bi-printer"></i></a>` : ""}</td>
+                                    </tr>`;
+                        });
+                    tableBody.html(items.join(""));
+                });
             });
 
 

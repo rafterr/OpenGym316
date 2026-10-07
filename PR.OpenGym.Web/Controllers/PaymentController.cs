@@ -40,13 +40,28 @@ namespace PR.OpenGym.Web.Controllers
         public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentDTO createPaymentDTO)
         {
             bool wasSuccessUdateOnTerminal = false;
-            bool membershipPaymentCreated = await _apiService.CreatePayment(createPaymentDTO);
-            if (membershipPaymentCreated)
+            createPaymentDTO.IssuedBy = User.Identity?.Name;
+            PaymentResultDTO? paymentResult = await _apiService.CreatePayment(createPaymentDTO);
+            if (paymentResult != null)
             {
-                Membership membership = await _apiService.GetMembershipById(createPaymentDTO.MembershipId);
-                wasSuccessUdateOnTerminal = await _faceOperations.ModifyNameStartTimeEndTimeFlow(createPaymentDTO.AssociateId.ToString(), string.Empty, createPaymentDTO.StartDate, membership.Period);         
+                try
+                {
+                    Membership membership = await _apiService.GetMembershipById(createPaymentDTO.MembershipId);
+                    wasSuccessUdateOnTerminal = await _faceOperations.ModifyNameStartTimeEndTimeFlow(createPaymentDTO.AssociateId.ToString(), string.Empty, createPaymentDTO.StartDate, membership.Period);
+                }
+                catch (Exception)
+                {
+                    // el pago ya quedo registrado, solo se informa que la terminal no se actualizo
+                    wasSuccessUdateOnTerminal = false;
+                }
             }
-            return Json(membershipPaymentCreated && wasSuccessUdateOnTerminal);
+            return Json(new
+            {
+                Success = paymentResult != null,
+                TerminalUpdated = wasSuccessUdateOnTerminal,
+                ReceiptId = paymentResult?.ReceiptId,
+                Folio = paymentResult?.Folio
+            });
         }
 
 

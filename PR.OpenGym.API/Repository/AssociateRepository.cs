@@ -53,6 +53,14 @@ namespace PR.OpenGym.API.Repository
             return entity;
         }
 
+        public async Task<Associate?> GetWithMembershipAndBranchAsync(int associateId)
+        {
+            return await _dbContext.Associates
+                .Include(a => a.AssociateMembership)
+                .Include(a => a.Branch)
+                .SingleOrDefaultAsync(e => e.Id == associateId);
+        }
+
         public async Task AddCheckIn(CheckIn checkIn)
         {
             await _dbContext.CheckIns.AddAsync(checkIn);

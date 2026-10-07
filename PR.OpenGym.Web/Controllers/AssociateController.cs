@@ -136,35 +136,47 @@ namespace PR.OpenGym.Web.Controllers
 
             if (assocateDTO.AssociateMembership != null)
                 assocateDTO.AssociateMembership.MembershipId = associateAndDetailsView.MembershipId;
+            // el alta cobra la primera membresia y genera su recibo
+            assocateDTO.PaymentMethod = associateAndDetailsView.PaymentMethod;
+            assocateDTO.IssuedBy = User.Identity?.Name;
             var associateResponse = await _apiService.PostAssociate(assocateDTO, null);
 
             if (associateResponse != null)
             {
+                // a partir de aqui el socio y su pago ya existen: siempre se regresa al listado
+                // para no duplicar el alta ni el cobro si se reenvia el formulario
+                TempData["CreateActionAssociateName"] = associateAndDetailsView.Associate.FirstName;
+                var receipts = await _apiService.GetReceiptsByAssociateId(associateResponse.Id);
+                TempData["CreateActionReceiptId"] = receipts.FirstOrDefault()?.Id;
+
                 associateAndDetailsView.AssociateDetails.AssociateId = associateResponse.Id;
                 var associateDetail = _mapper.Map<AssociateDetails>(associateAndDetailsView.AssociateDetails);
                 var associateDetilsResponse = await _apiService.PostAssociateDetails(associateDetail);
-                if (associateDetilsResponse != null)
+
+                RecordRequest? isFlowOK = null;
+                try
                 {
                     using (MemoryStream ms = new MemoryStream())
                     {
                         if (img != null) img.CopyTo(ms);
                         associateAndDetailsView.Associate.Id = associateResponse.Id;
                         Membership membership = await _apiService.GetMembershipById(associateAndDetailsView.MembershipId);
-                        var isFlowOK = await _faceOperations.RegisterUserFlow(associateAndDetailsView.Associate, membership.Period, ms.ToArray());
-
-                        if (isFlowOK != null)
-                        {
-                            TempData["CreateActionResult"] = true;
-                            TempData["CreateActionAssociateName"] = associateAndDetailsView.Associate.FirstName;
-                            return RedirectToAction(nameof(Index));
-                        }
-
-                        return View(associateAndDetailsView);
+                        isFlowOK = await _faceOperations.RegisterUserFlow(associateAndDetailsView.Associate, membership.Period, ms.ToArray());
                     }
-
                 }
+                catch (Exception)
+                {
+                    isFlowOK = null;
+                }
+
+                TempData["CreateActionResult"] = true;
+                TempData["CreateActionTerminalError"] = isFlowOK == null || associateDetilsResponse == null;
+                return RedirectToAction(nameof(Index));
             }
 
+            var memberships = await _apiService.GetProducts(true);
+            associateAndDetailsView.Memberships = memberships?.ToList();
+            associateAndDetailsView.IsFaceTerminalConnected = await _faceOperations.TestConnection();
             return View(associateAndDetailsView);
 
             //if (ModelState.IsValid && img != null && img.Length > 0)

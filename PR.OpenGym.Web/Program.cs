@@ -11,8 +11,8 @@ using System.Net;
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnectionMysql") ?? throw new InvalidOperationException("Connection string 'DefaultConnectionMysql' not found.");
 
-var endpoint = builder.Configuration.GetSection("Endpoints").GetValue<string>("Online");
-//var endpoint = builder.Configuration.GetSection("Endpoints").GetValue<string>("Dev");
+//var endpoint = builder.Configuration.GetSection("Endpoints").GetValue<string>("Online");
+var endpoint = builder.Configuration.GetSection("Endpoints").GetValue<string>("Dev");
 
 builder.Services.AddHttpClient<IApiService, APIService>((provider, client) => client.BaseAddress = new Uri(endpoint));
 

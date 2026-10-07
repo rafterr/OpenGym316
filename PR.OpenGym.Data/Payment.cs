@@ -12,6 +12,7 @@ namespace PR.OpenGym.Data
         public string? Concept { get; set; }
         public int? ProductId { get; set; }
         public Product? Product { get; set; }
+        public PaymentMethod PaymentMethod { get; set; }
 
     }
 }

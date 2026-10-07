@@ -56,9 +56,9 @@ namespace PR.OpenGym.API.Controllers
                 if (createPaymentDTO.AssociateId == 0)
                     return BadRequest();
 
-                bool res = await _paymentService.PayAssociateMembership(createPaymentDTO);
-                if (res)
-                    return Ok();
+                PaymentResultDTO? res = await _paymentService.PayAssociateMembership(createPaymentDTO);
+                if (res != null)
+                    return Ok(res);
                 else
                     return BadRequest("No se pudo compretar la operacion");
             }

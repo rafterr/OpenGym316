@@ -17,6 +17,11 @@ namespace PR.OpenGym.Web.Models
         [Display(Name = "Membresia")]
         public int MembershipId { get; set; }
         public List<Product>? Memberships  { get; set; }
+        /// <summary>
+        /// Solo en el alta: metodo con el que se cobra la primera membresia
+        /// </summary>
+        [Display(Name = "Metodo de pago")]
+        public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cash;
         public bool IsFaceTerminalConnected { get; set; }
         public string? ImageBase64URIData { get; set; }
     }

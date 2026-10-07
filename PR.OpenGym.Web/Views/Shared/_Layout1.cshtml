@@ -49,6 +49,11 @@
                                 <i class="fs-5 bi-currency-dollar"></i><span class="ms-1 d-none d-sm-inline"> Pagos</span>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-sm-0 px-2 text-white @(ViewBag.Current == "Receipt" ? "active" : "")" asp-controller="Receipt" asp-action="Index">
+                                <i class="fs-5 bi-receipt"></i><span class="ms-1 d-none d-sm-inline"> Recibos</span>
+                            </a>
+                        </li>
                     </ul>
 
                     <partial name="_LoginPartial1" />

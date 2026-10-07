@@ -41,6 +41,7 @@ builder.Services.AddScoped<IAssociateDetailsRepository,AssociateDetailsRepositor
 builder.Services.AddScoped<IProductRepository,ProductRepository>();
 builder.Services.AddScoped<IBranchRepository,BranchRepository>();
 builder.Services.AddScoped<IPaymentRepository,PaymentRepository>();
+builder.Services.AddScoped<IReceiptRepository,ReceiptRepository>();
 
 
 
@@ -51,6 +52,7 @@ builder.Services.AddScoped<IAssociateDetailsService, AssociateDetailsService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IBranchService, BranchService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IReceiptService, ReceiptService>();
 
 //google service
 
