@@ -1,0 +1,162 @@
+﻿@model IEnumerable<IGrouping<string,FaceTerminalCheckInsViewModel>>
+@{
+    ViewData["Title"] = "Home Page";
+    TimeZoneInfo timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time (Mexico)");
+    var today = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
+}
+
+@*<link rel="stylesheet" href="~/css/customStyles.css" type="text/css" />
+*@
+
+@if (!ViewBag.IsFaceTerminalConnected)
+{
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+        No se pudo conectar con la terminal de reconocimiento facial, revisa la conexión de la terminal e intenta otra vez
+        <a href="/Home">
+            <i class="bi bi-arrow-clockwise"></i>
+        </a>
+    </div>
+}
+
+
+<h4 class="text-success">Visitas de Hoy @today.ToString("dd/MM/yyyy") </h4>
+<div class="table-wrapper-scroll-y my-custom-scrollbar">
+    <table class="table table-bordered table-striped table-hover mb-0">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Socio</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var group in Model)
+            {
+                <tr data-id="@group.ElementAt(0).Id"
+                class='@(group.ElementAt(0).IsExpired ? "table-danger" : "")'>
+                    <td>
+                        @group.ElementAt(0).Id
+                    </td>
+                    <td>
+                        @group.Key
+                    </td>
+                </tr>
+            }
+
+        </tbody>
+    </table>
+</div>
+
+<hr />
+
+<div class="d-flex mt-4 mb-2 justify-content-around">
+    <div class="card" style="width: 18rem;">
+        <div class="card-body">
+            <h5 class="card-title">Visitas totales Hoy</h5>
+            <h6 class="card-subtitle mb-2 text-body-secondary">
+                <hr />
+            </h6>
+            <p class="card-text display-4 text-info">
+                @Model.Count()
+            </p>
+        </div>
+    </div>
+
+    <div class="card d-none" style="width: 18rem;">
+        <div class="card-body">
+            <h5 class="card-title">Total Pagos Hoy</h5>
+            <h6 class="card-subtitle mb-2 text-body-secondary">
+                <hr />
+            </h6>
+            <p class="card-text display-4 text-success" id="pTotal">
+                $1256.00
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade text-center" id="associateModal" tabindex="-1" aria-labelledby="associateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="associateModalLabel"></h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h5>@Constants.Associate</h5>
+                <img src="" alt="" id="imgModal" width="300" height="300" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+    {
+    <script>
+        $(function () {
+            function getDetailsMembership(associateId) {
+                fetch("Home/GetDetailsMembership?associateId=" + associateId)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data) {
+                            let h3 = $("#membershipStatus");
+                            let date = new Date(data.to);
+                            let today = new Date();
+
+                            if (date.getTime() >= today.getTime()) {
+                                h3.attr("class", "text-success");
+                                h3.text("Al Corriente");
+                            } else {
+                                h3.attr("class", "text-danger");
+                                h3.text("Falta Pago");
+                            }
+
+                        }
+                    });
+            }
+
+
+            $(".table tr").click(function (e) {
+                $("#imgModal").attr("src", "");
+                $('#associateModalLabel').text("");
+                var isRow = $(this).is('tr');
+                if (isRow) {
+                    let id = $(this).data("id");
+                    if (!id)
+                        return;
+
+                    fetch("/GetPhotoDevice?faceUserID=" + id)
+                        .then(result => result.json())
+                        .then(data => {
+                            let img;
+                            if (data.isSuccess)
+                                img = data.base64URIData;
+                            else
+                                img = "/img/image_no_available.png";
+
+                            let imgHtml = $("#imgModal").attr("src", img);
+                            let nombre = $(this).children().eq(1).text().trim();
+                            $('#associateModal').modal('show');
+                            $('#associateModalLabel').text(nombre);
+                        });
+                }
+            });
+
+            let p = $("#pTotal");
+            let pagosTotales = 0;
+            let total = 0;
+            let interval = setInterval(function () {
+                total += 100;
+                if (total >= pagosTotales) {
+                    clearInterval(interval);
+                    total = pagosTotales;
+                }
+                p.text("$" + total);
+            }, 50);
+
+
+        });
+
+    </script>
+}
+

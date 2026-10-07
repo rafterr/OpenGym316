@@ -1,0 +1,211 @@
+﻿@model AssociateAndDetailsViewModel
+
+@section Styles
+    {
+    <link rel="stylesheet" type="text/css" href="~/css/customStyles.css" />
+}
+
+@if (!Model.IsFaceTerminalConnected)
+{
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+        No se pudo conectar con la terminal de reconocimiento facial, las altas de usuarios no estan disponibles
+        <a href="/Associate/Create">
+            <i class="bi bi-arrow-clockwise"></i>
+        </a>
+    </div>    
+
+}
+
+<div class="d-flex justify-content-center mt-3">
+    <div class="card" style="width:300px">
+        <img src="" class="card-img-top d-none" alt="persona" id="imgPersona" height="250">
+        <img src="~/img/face_scann.gif" class="card-img-top d-none" alt="scann" id="imgFaceScann">
+        <div class="card-body">
+            <p class="card-text">Hola! Bienvenido</p>
+            <p id="displayName" class="h5"></p>
+        </div>
+        <div class="card-footer text-center">
+            @*    <input id="inputImgPersona" type="file" class="form-control form-control-sm  d-block d-sm-none" capture="camera" />
+            <button id="btnOpenCamera" class="btn btn-info d-none d-sm-block"> <i class="fa fa-camera"></i> Abrir Camara</button>*@
+            <button id="btnCapturaImage" class="btn btn-secondary text-white"> <i class="bi bi-camera"></i> Capturar</button>
+        </div>
+    </div>
+</div>
+
+
+
+
+<form asp-action="Create" class="mt-4 mb-4" enctype="multipart/form-data">
+    <partial name="_FormAssociate" model="Model" />
+</form>
+
+
+<div class="modal fade text-center" id="photoModal" tabindex="-1" aria-labelledby="associateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="associateModalLabel"></h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <video id="webcam" autoplay playsinline width="640" height="480"></video>
+                <canvas id="canvas" class="d-none"></canvas>
+            </div>
+            <div class="modal-footer">
+                <button id="takePhoto"> <i class="fa fa-camera"></i> Tomar Foto</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts
+    {
+
+    <script type="text/javascript" src="https://unpkg.com/webcam-easy/dist/webcam-easy.min.js"></script>
+    <script>
+        $(function () {
+            const form = $("form");
+            const firstName = $("#Associate_FirstName");
+            const lastName = $("#Associate_LastName");
+            const displayName = $("#displayName");
+            const inputImgFile = $("#inputImgPersona");
+            const inputImgPersonaForm = document.getElementById("inputImgPersonaForm");
+            const btnTakePhoto = $('#takePhoto');
+            const btnOpenCamera = $('#btnOpenCamera');
+            const _btnCapturaImage = $('#btnCapturaImage');
+            const _img = $("#imgPersona");
+            const _imgFaceScann = $('#imgFaceScann')
+
+            _btnCapturaImage.on('click', function () {
+                if (!_img.hasClass("d-none")) _img.toggleClass("d-none");
+                _img.attr("src", "");
+                _imgFaceScann.toggleClass("d-none");
+
+                fetch("/TakePhotoDevice")
+                    .then(data => data.json())
+                    .then(json => {
+                        if (json.isSuccess) {
+                            _img.attr("src", json.base64URIData);
+                            if (_img.hasClass("d-none")) _img.toggleClass("d-none");
+                            setFile(json.base64URIData);
+                        }
+                        else alert("No se capturaron los rasgos de la persona");
+                    }).finally(_ => {
+                        _imgFaceScann.toggleClass("d-none");
+                    });
+            });
+
+            //Metodo para establecer al campo oculto del formulario la imagen
+            function setFile(dataUri) {
+                let fileName = 'profile.jpg'
+
+                fetch(dataUri)
+                    .then(res => res.blob())
+                    .then(blob => {
+                        let file = new File([blob], fileName, { type: "image/jpeg", lastModified: new Date().getTime() }, 'utf-8');
+                        let container = new DataTransfer();
+                        container.items.add(file);
+                        inputImgPersonaForm.files = container.files;
+                    })
+
+            }
+
+            //webcam config
+
+            //const webcamElement = document.getElementById('webcam');
+            //const canvasElement = document.getElementById('canvas');
+            //const webcam = new Webcam(webcamElement, 'user', canvasElement, null);
+
+
+
+            //function getVideoInputs(mediaDevices) {
+            //    mediaDevices.forEach(mediaDevice => {
+            //        if (mediaDevice.kind === 'videoinput') {
+            //            if (mediaDevice.label.includes("HD")) {
+            //                webcam._selectedDeviceId = mediaDevice.deviceId;
+            //                webcam.start()
+            //                    .then(result => {
+            //                        console.log("webcam started");
+            //                    })
+            //                    .catch(err => {
+            //                        console.log(err);
+            //                    });
+            //            }
+            //        }
+            //    });
+            //}
+
+            //function cameraStart() {
+            //    navigator.mediaDevices.enumerateDevices()
+            //        .then(getVideoInputs)
+            //        .catch(console.log);
+            //}
+
+            //function setFile(dataUri) {
+            //    let fileName = 'profile.jpg'
+
+            //    fetch(dataUri)
+            //        .then(res => res.blob())
+            //        .then(blob => {
+            //            let file = new File([blob], fileName, { type: "image/jpeg", lastModified: new Date().getTime() }, 'utf-8');
+            //            let container = new DataTransfer();
+            //            container.items.add(file);
+            //            inputImgPersonaForm.files = container.files;
+            //        })
+
+            //}
+
+            //function takePhoto() {
+            //    let picture = webcam.snap();
+            //    $("#imgPersona").attr("src", picture);
+            //    webcam.stop();
+            //    $('#photoModal').modal('hide');
+            //    setFile(picture);
+
+            //}
+
+
+            //btnOpenCamera.on("click", function () {
+            //    $('#photoModal').modal('show');
+            //    navigator.mediaDevices.getUserMedia({ video: true }).then(function (media) {
+            //        console.log(media);
+            //        cameraStart();
+            //    });
+
+            //})
+
+            //btnTakePhoto.on("click", takePhoto);
+            //end webcam config
+
+            function concatenateFields() {
+                displayName.text(firstName.val() + " " + lastName.val());
+            }
+
+            firstName.change(concatenateFields);
+            lastName.change(concatenateFields);
+            //inputImgFile.change(function () {
+            //    if (inputImgFile.length > 0) {
+            //        let file = inputImgFile[0].files[0];
+            //        let blob_url = window.URL.createObjectURL(file);
+            //        img.attr("src", blob_url);
+            //        inputImgPersonaForm.files = inputImgFile[0].files;
+            //    }
+            //});
+
+        });
+
+        $('form').submit(function() {
+            $(this).find(':submit').attr('disabled', 'disabled');
+            Swal.fire({
+                title: 'Espere...',
+                timerProgressBar: true,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                allowOutsideClick: false
+            });
+        });
+    </script>
+    }

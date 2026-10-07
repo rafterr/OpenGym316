@@ -1,0 +1,372 @@
+﻿@model IEnumerable<AssociateGetDTO>
+
+
+@if (!ViewBag.IsFaceTerminalConnected)
+{
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+        No se pudo conectar con la terminal de reconocimiento facial, revisa la conexión de la terminal e intenta otra vez
+        <a href="/Associate">
+            <i class="bi bi-arrow-clockwise"></i>
+        </a>
+    </div>
+
+}
+<div class="row">
+    <div class="col-md-6">
+        <div class="input-group">
+            <span class="input-group-btn">
+                <a class="btn btn-success" asp-action="Create"> <i class="bi bi-plus-lg"></i> Nuevo </a>
+            </span>
+        </div>
+    </div>
+    <div class="col-12 mt-2 mt-md-0 col-md-6">
+        <div class="input-group">
+            <input type="text" class="form-control" placeholder="4771234567" id="txtVisitPhone" maxlength="10">
+            <span class="input-group-btn">
+                <button class="btn btn-warning" type="button" id="btnGenerateVisit"><i class="bi bi-qr-code"></i> Generar Visita</button>
+            </span>
+        </div>
+    </div>
+</div>
+<div class="mt-2">
+    <table class="table table-hover" id="associatesTable">
+        <thead class="table-dark">
+            <tr>
+                <th>Codigo</th>
+                <th>Nombre</th>
+                <th>Fecha de registro</th>
+                <th>Fecha de Inicio</th>
+                <th>Dia vencidos</th>
+                <th>Fecha de Pago</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var associate in Model)
+            {
+                <tr data-id="@associate.Id" data-to="@associate.AssociateMembership.To?.ToString("s")" data-status="@associate.AssociateMembership?.MembershipStatus" role="button">
+                    <td>
+                        @associate.Id
+                    </td>
+                    <td>
+                        @($"{associate.FirstName} {associate.LastName}")
+                    </td>
+                    <td>
+                        @associate.CreatedOn.ToString("dd MMMM yyyy")
+                    </td>
+                    <td>
+                        @associate.AssociateMembership?.From.Value.ToString("dd MMMM yyyy")
+                    </td>
+                    <td>
+                        @(DateTime.Now.ConvertDateToMexicoCentralLocalZone() > @associate.AssociateMembership?.To.Value ? (DateTime.Now.ConvertDateToMexicoCentralLocalZone() - associate.AssociateMembership?.To.Value).Value.Days.ToString() : "N/A")
+                    </td>
+                    <td>
+                        @associate.AssociateMembership?.To.Value.ToString("dd MMMM yyyy")
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+</div>
+
+<div class="modal fade text-center" id="associateModal" tabindex="-1" aria-labelledby="associateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="associateModalLabel"></h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h1>@Constants.Associate</h1>
+                <img src="" alt="" id="imgModal" width="300" height="300" />
+                <h3 class="text-success" id="associateStatusLabel">Activo</h3>
+            </div>
+            <div class="modal-footer">
+                <div class="btn-group">
+                    <button class="btn btn-secondary text-white" id="btnPagos"><i class="bi bi-card-list"></i> Pagos</button>
+                    <button class="btn btn-primary text-white" id="btnUpdate"><i class="bi bi-pencil-fill"></i> Editar</button>
+                    <button class="btn btn-danger" id="btnDelete"><i class="bi bi-trash-fill"></i>Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade text-center" id="visitModal" tabindex="-1" aria-labelledby="visitModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="visitModalLabel"></h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h1>Visita</h1>
+                <img src="" alt="" id="imgVisitaModal" width="300" height="300" />
+            </div>
+            <div class="modal-footer">
+                @*<button href="#" class="btn btn-danger">Eliminar</button>*@
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal" tabindex="-1" role="dialog" id="paymentsModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <table class="table" id="tblPagos">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts
+    {
+    <script>
+        $(function () {
+            const _btnVisit = $("#btnGenerateVisit");
+            const _txtVisitPhone = $("#txtVisitPhone");
+            const _imgVisitaModal = $("#imgVisitaModal");
+            const _visitModal = $("#visitModal");
+            const _associateStatusLabel = $("#associateStatusLabel");
+            const _btnUpdate = $("#btnUpdate");
+            const _btnDelete = $("#btnDelete");
+            const _btnPagos = $("#btnPagos");
+            const _paymentsModal = $("#paymentsModal");
+            showAlertAfterCreate();
+
+            $('#associatesTable').DataTable({
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.13.5/i18n/es-ES.json"
+                },
+                //processing: true,
+                //serverSide: true,
+                //ajax: {
+                //    url: "Associate/MyJson",
+                //    type: "POST",
+                //    dataType: "json",
+                //},
+                //pageLength: 30,
+                ////filter: true,
+                //responsivePriority: 1,
+                //data: null,
+                //columns: [
+                //    {
+                //        "data": "employeeNo",
+                //        "name": "Id",
+                //        "autoWith": true
+                //    },
+                //    {
+                //        "data": "name",
+                //        "name": "Nombre",
+                //        "autoWith": true
+                //    }
+                //],
+                //"searching": true, // Enable searching
+                //"paging": true,
+            });
+
+            let _SELECTED_ID = 0;
+
+            function toggleLabelStatus(tr) {
+                let status = tr.data("status");
+
+                let dateTo = new Date(tr.data("to"));
+                let dateNow = new Date();
+
+                if (status == "Cancelled") {
+                    _associateStatusLabel.removeClass("text-success");
+                    _associateStatusLabel.addClass("text-danger");
+                    _associateStatusLabel.text("Suspendido");
+                } else {
+                    if (dateNow > dateTo) {
+                        _associateStatusLabel.removeClass("text-success");
+                        _associateStatusLabel.addClass("text-danger");
+                        _associateStatusLabel.text("Falta Pago");
+                    }
+                    else {
+                        _associateStatusLabel.removeClass("text-danger");
+                        _associateStatusLabel.addClass("text-success");
+                        _associateStatusLabel.text("Al corriente");
+                    }
+                }
+            }
+
+            $(".table tr").click(function (e) {
+                $("#imgModal").attr("src", "");
+                $('#associateModalLabel').text("");
+                var isRow = $(this).is('tr');
+                if (isRow) {
+                    let id = $(this).data("id");
+                    if (!id)
+                        return;
+
+                    fetch("/GetPhotoDevice?faceUserID=" + id)
+                        .then(result => result.json())
+                        .then(data => {
+                            let img;
+                            if (data.isSuccess)
+                                img = data.base64URIData;
+                            else
+                                img = "/img/image_no_available.png";
+
+                            let imgHtml = $("#imgModal").attr("src", img);
+                            let nombre = $(this).children().eq(1).text().trim();
+                            toggleLabelStatus($(this));
+                            if (nombre == "Admin" || nombre == "Visita") {
+                                _btnUpdate.addClass("disabled");
+                                _btnDelete.addClass("disabled");
+                            } else {
+                                _btnUpdate.removeClass("disabled");
+                                _btnDelete.removeClass("disabled");
+                            }
+                            $('#associateModal').modal('show');
+                            $('#associateModalLabel').text(nombre);
+                        });
+                    _SELECTED_ID = id;
+                }
+            });
+
+            _btnUpdate.on("click", function () {
+                window.location.href = "Associate/Update/" + _SELECTED_ID;
+            });
+
+            _btnVisit.on('click', function () {
+                let phoneNumber = _txtVisitPhone.val();
+                if (phoneNumber && phoneNumber.length == 10) {
+                    var apiWA = "https://wa.me/+52" + phoneNumber;
+                    fetch("/Associate/CreateVisit", {
+                        method: "POST",
+                        body: null
+                    })
+                        .then(result => result.json())
+                        .then(data => {
+                            if (data.isSuccess) {
+                                var img = data.base64URIData;
+                                _visitModal.modal('show');
+                                _imgVisitaModal.attr("src", img);
+                                window.open(apiWA, "_blank", "height=500,width=500,modal=yes,alwaysRaised=yes");
+
+                                //fetch(img)
+                                //.then(response=>response.blob())
+                                //.then(result=>{
+                                //        navigator.clipboard.write([new ClipboardItem({ "image/png": result })])
+                                //       .then(r=>console.log("copied to clipboard"));
+                                //});
+
+                            }
+                        });
+                }
+                else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops... 😔',
+                        text: 'Ingresa un numero de telefono válido'
+                    });
+                }
+
+            });
+
+            _btnDelete.on('click', function () {
+                Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: "Esta acción no se puede deshacer",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Si'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+
+                        if (_SELECTED_ID) {
+                            fetch("/Associate/Delete/" + _SELECTED_ID, {
+                                method: "POST"
+                            })
+                                .then(data => data.json())
+                                .then(result => {
+                                    if (result.result == "ok") {
+                                        Swal.fire(
+                                            'Registro eliminado!',
+                                            'Se dio de baja el socio',
+                                            'success'
+                                        );
+                                        $('#associateModal').modal('hide');
+                                        var tr = document.querySelector("tr[data-id='" + _SELECTED_ID + "']");
+                                        if (tr) tr.style.display = "none";
+
+                                    } else {
+                                        alert("No se pudo completar la operacion");
+                                    }
+                                });
+                        }
+                    }
+                });
+            });
+
+            function showAlertAfterCreate() {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer)
+                        toast.addEventListener('mouseleave', Swal.resumeTimer)
+                    }
+                });
+                // use TempData from Controller AssociateController on Action Create
+                let shouldShow = @(TempData["CreateActionResult"] != null && TempData["CreateActionAssociateName"] != null ? TempData["CreateActionResult"].ToString().ToLower() : "false");
+
+                if (shouldShow) {
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Se agrego correctamente @TempData["CreateActionAssociateName"]'
+                    });
+                }
+            }
+
+            _btnPagos.on('click', function () {
+                if (!_SELECTED_ID) return;
+                var tblPagos = $('#tblPagos');
+                var tableBody = tblPagos.children('tbody');
+                tableBody.innerHTML = "";
+                _paymentsModal.modal('show');
+
+                fetch("/Payment/GetPaymentsByAssociateId/" + _SELECTED_ID, {
+                    method: "GET"
+                })
+                    .then(data => data.json())
+                    .then(result => {
+                        debugger;
+                        var template = "";
+                        var items = [];
+                        result.forEach(e => {
+                            template += `<tr>
+                                            <td>${(e.createdOn?.split("T")[0] ?? "-")}</td>
+                                            <td>$${(e.amount ?? 0)}</td>
+                                         </tr>`;
+                            items.push(template);
+                        });
+                        tableBody.html(items.join(""));
+                    }
+                    );
+            });
+
+
+        });
+    </script>
+}

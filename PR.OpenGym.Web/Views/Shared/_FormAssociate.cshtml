@@ -1,0 +1,119 @@
+﻿@model AssociateAndDetailsViewModel
+@*
+    For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+*@
+
+<div class="row">
+    <div class="col-12">
+        <div class="form-floating mb-2">
+            <input asp-for="Associate.FirstName" class="form-control" />
+            <label asp-for="Associate.FirstName"></label>
+        </div>
+
+        <div class="form-floating mb-2">
+            <input asp-for="Associate.LastName" class="form-control" />
+            <label asp-for="Associate.LastName"></label>
+        </div>
+
+    </div>
+    <div class="col">
+        <input type="hidden" asp-for="Associate.Id" class="form-control" />
+        <input type="hidden" asp-for="AssociateDetails.Id" class="form-control" />
+        <input type="hidden" asp-for="AssociateDetails.CreatedOn" class="form-control" />
+        <input type="hidden" asp-for="AssociateDetails.ModifiedOn" class="form-control" />
+
+        <input type="hidden" asp-for="Associate.CreatedOn" class="form-control" />
+        <input type="hidden" asp-for="Associate.ModifiedOn" class="form-control" />
+        <input id="inputImgPersonaForm" type="file" class="d-none" name="img" />
+
+        <input type="hidden" asp-for="Associate.Id" class="form-control" />
+
+        <div class="form-floating mb-2">
+            <select asp-for="MembershipId" class="form-select">
+                @foreach (var item in Model.Memberships)
+                {
+                    <option value="@item.Id">@item.Name</option>
+                }
+            </select>
+            <label asp-for="MembershipId"></label>
+        </div>
+
+        <div class="form-floating mb-2">
+            <select asp-for="Associate.BranchId" class="form-select" readonly>
+                <option value="1" selected>Rio Mayo</option>
+            </select>
+            <label asp-for="Associate.BranchId"></label>
+
+        </div>
+        <div class="form-floating mb-2">
+            <select asp-for="Associate.Gender" class="form-select">
+                <option value="@Gender.Male" selected>Hombre</option>
+                <option value="@Gender.Female">Mujer</option>
+                <option value="@Gender.Other">Prefiero no decir</option>
+            </select>
+            <label asp-for="Associate.Gender"></label>
+        </div>
+        <div class="form-floating mb-2">
+            <input asp-for="Associate.Age" class="form-control" />
+            <label asp-for="Associate.Age"></label>
+        </div>
+
+    </div>
+    <div class="col">
+        <div class="form-floating mb-2">
+            <input asp-for="Associate.AssociateMembership.From" class="form-control" />
+            <label asp-for="Associate.AssociateMembership.From"></label>
+        </div>
+        <div class="form-floating mb-2">
+            <input asp-for="Associate.Email" class="form-control" />
+            <label asp-for="Associate.Email"></label>
+        </div>
+        <div class="form-floating mb-2">
+
+            <input asp-for="Associate.Phone" class="form-control" />
+            <label asp-for="Associate.Phone"></label>
+        </div>
+        <div class="form-floating mb-2">
+        </div>
+        <div class="form-floating mb-2">
+            <input asp-for="Associate.Facebook" class="form-control" />
+            <label asp-for="Associate.Facebook"></label>
+        </div>
+
+    </div>
+    <div class="col-12">
+        <div class="form-floating mb-2">
+            <input asp-for="AssociateDetails.Street" class="form-control" />
+            <label asp-for="AssociateDetails.Street"></label>
+        </div>
+        <div class="form-floating mb-2">
+            <input asp-for="AssociateDetails.Number" class="form-control" />
+            <label asp-for="AssociateDetails.Number"></label>
+        </div>
+        <div class="form-floating mb-2">
+            <input asp-for="AssociateDetails.Neighborhood" class="form-control" />
+            <label asp-for="AssociateDetails.Neighborhood"></label>
+        </div>
+        <div class="form-floating mb-2">
+            <input asp-for="AssociateDetails.ZipCode" class="form-control" />
+            <label asp-for="AssociateDetails.ZipCode"></label>
+        </div>
+        <div class="form-floating mb-2">
+            <input asp-for="AssociateDetails.City" class="form-control" />
+            <label asp-for="AssociateDetails.City"></label>
+        </div>
+        <div class="form-floating mb-2">
+            <input asp-for="AssociateDetails.State" class="form-control" />
+            <label asp-for="AssociateDetails.State"></label>
+        </div>
+        <div class="form-floating mb-2">
+            <input asp-for="AssociateDetails.Country" class="form-control"/>
+            <label asp-for="AssociateDetails.Country"></label>
+        </div>
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary btn-block" style="width:300px" @(!Model.IsFaceTerminalConnected ? "disabled" : "")><i class="bi bi-floppy"></i>  Guardar</button>
+        </div>
+
+    </div>
+</div>

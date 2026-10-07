@@ -1,0 +1,158 @@
+﻿@model PaymentViweModel
+@*<div class="text-center">
+    <div class="alert alert-warning" role="alert">
+        <i class="fa-solid fa-triangle-exclamation"></i> En desarrollo
+    </div>
+
+</div>
+*@
+<div class="input-group mb-3">
+    <input type="text" class="form-control" placeholder="🔍 e.g.: Juan Perez" aria-label="Username" aria-describedby="basic-addon1" list="dataListAssociates" id="txtAssociate">
+    <select class="form-select" id="dataListAssociates">
+    </select>
+    <button class="btn btn-success" onclick="getAssociate()"><i class="bi bi-arrow-return-right"></i> Aceptar</button>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col text-center">
+            <img src="~/img/emptyuser.jpg" alt="" class="border rounded-2" id="imgPerson" style="height:320px; width:400px;" />
+        </div>
+        <div class="col">
+
+            <p class="display-6" id="lblName">-</p>
+            <p class="display-6" id="lblAge">-</p>
+            <p class="display-6" id="lblMembershipStatus">-</p>
+            
+            <p id="lblVencimiento"></p>
+            
+
+            <div class="input-group mb-3">
+                <div class="form-floating">
+                    <select class="form-select" id="selectMemberships">
+                        @foreach (var mem in Model.Memberships)
+                        {
+                            <option value="@mem.Id">@mem.Name</option>
+                        }
+                    </select>
+                    <label for="floatingSelect">Membresia</label>
+                </div>
+                <div class="form-floating">
+                    <input type="date" class="form-control" value="@Model.StartDate.ToString("yyyy-MM-dd")" id="txtStartDate" />
+                    <label for="floatingSelect">Fecha de Inicio</label>
+                </div>
+            </div>
+            <button class="btn w-100 btn-success fs-4" onclick="paySubscription()"><i class="bi bi-check-circle"></i> Pagar</button>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts{
+    <script>
+        const _txtAssociate = $("#txtAssociate");
+        const _dataListAssociates = $("#dataListAssociates");
+        let _associateSelected = null;
+        let _associatesLst = [];
+
+        var timeout = null;
+        function load() {
+            clearTimeout(timeout);
+            timeout = setTimeout(function () {
+
+                fetch("/search/" + _txtAssociate.val())
+                    .then(data => data.json())
+                    .then(result => {
+                        _dataListAssociates.empty(); // Importante vaciar!
+                        if (result.length > 0) {
+                            _associatesLst = result;
+                            result.forEach(e => {
+                                _dataListAssociates.append(`<option value="${e.id}">${e.firstName} ${e.lastName}</option>`);
+                            });
+                        }
+                    });
+
+            }, 500);
+        }
+
+        function paySubscription() {
+            if (_associateSelected != null) {
+                var wait = Swal.fire({
+                    title: 'Espere...',
+                    timerProgressBar: true,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    },
+                    allowOutsideClick: false
+                });
+                fetch("payment/CreatePayment", {
+                    method: "post",
+                    headers: {
+                        'Content-Type': "application/json; charset=utf-8"
+                    },
+                    body: JSON.stringify({
+                        associateId: _associateSelected.id,
+                        membershipId: $("#selectMemberships").val(),
+                        startDate: $("#txtStartDate").val()
+                    })
+                })
+                    .then(data => data.json())
+                    .then(result => {
+                        if (result) {
+                            Swal.fire({
+                                title: "Gracias",
+                                icon: "success",
+                                confirmButtonColor: "#0d6efd"
+                            });
+                        } else {
+                            Swal.fire({
+                                title: "No se pudo crear el pago",
+                                icon: "error",
+                                confirmButtonColor: "#0d6efd"
+                            });
+                        }
+                    }).finally(_ => wait.close());
+            } else {
+                Swal.fire({
+                    title: "No se ha seleccionado un socio",
+                    icon: "error",
+                    confirmButtonColor: "#0d6efd"
+                })
+            }
+        }
+
+        function getAssociate() {
+            _associateSelected = _associatesLst.filter(a => a.id == _dataListAssociates.val())[0];
+            if (!_associateSelected) {
+                $("#lblName").text("-");
+                $("#lblAge").text("-");
+                $("#lblMembershipStatus").text("-");
+                $("#imgPerson").attr("src", "/img/emptyuser.jpg");              
+                return;
+            };
+            console.log(_associateSelected);
+            fetch("/GetPhotoDevice?faceUserID=" + _associateSelected.id)
+                .then(data => data.json())
+                .then(result => {
+                    var img;
+                    if (result.isSuccess) {
+                        img = result.base64URIData;
+
+                    } else {
+                        img = "/img/image_no_available.png"
+                    }
+                    $("#imgPerson").attr("src", img);
+                });
+
+            $("#lblName").text(_associateSelected.firstName + " " + _associateSelected.lastName);
+            $("#lblAge").text((_associateSelected.age || "-") + " Años");
+            $("#lblMembershipStatus").text(_associateSelected.status == "1" ? "Activo" : "No Pagada");
+            $("#lblVencimiento").text("Fecha vencimiento: " + new Intl.DateTimeFormat('es-MX').format(new Date(_associateSelected.associateMembership.to)));
+            
+        }
+
+        _txtAssociate.on('keyup', load);
+    </script>
+}
+
+

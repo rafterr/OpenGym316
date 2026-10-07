@@ -1,0 +1,39 @@
+﻿@model MembershipViewModel
+@{
+    ViewData["Title"] = "Create";
+}
+
+<form action="Upsert" method="post">
+    <input type="hidden" asp-for="Id" />
+    <div class="form-floating mb-3">
+        <input type="text" class="form-control" asp-for="Name">
+        <label asp-for="Name"></label>
+    </div>
+
+    <div class="input-group mb-3">
+        <span class="input-group-text">$</span>
+        <div class="form-floating">
+            <input type="number" class="form-control" asp-for="Price"
+                   min="0"
+                   step="0.01"
+                   placeholder="0.00"
+                   pattern="^\d+(?:\.\d{1,2})?$">
+            <label asp-for="Price"></label>
+        </div>
+    </div>
+
+    <div class="form-floating mb-3">
+        <input type="number" class="form-control" asp-for="Period"
+               min="1"
+               step="1"
+               onfocus="this.previousValue = this.value"
+               onkeydown="this.previousValue = this.value"
+               oninput="validity.valid || (value = this.previousValue)">
+        <label asp-for="Period"></label>
+    </div>
+    <button class="btn btn-primary">
+        <span class="bi bi-floppy"></span>
+        Guardar
+    </button>
+</form>
+

@@ -1,0 +1,29 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using PR.OpenGym.Web.Areas.Identity.Data
+
+@inject SignInManager<PROpenGymWebUser> SignInManager
+@inject UserManager<PROpenGymWebUser> UserManager
+
+
+@if (SignInManager.IsSignedIn(User))
+{
+
+    <div class="dropdown py-sm-4 mt-sm-auto ms-auto ms-sm-0 flex-shrink-1">
+        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="~/img/emptyuser.jpg" alt="hugenerd" width="28" height="28" class="rounded-circle">
+            <small class="ms-1">@UserManager.GetUserName(User).Split("@")[0]</small>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+            <li><a class="dropdown-item d-none" href="#">Settings</a></li>
+            <li><a class="dropdown-item d-none" href="#">Profile</a></li>
+            <li>
+                <hr class="dropdown-divider">
+            </li>
+            <li>
+                <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                    <button id="logout" type="submit" class="dropdown-item">Salir</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+}

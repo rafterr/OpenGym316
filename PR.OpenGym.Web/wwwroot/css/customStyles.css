@@ -1,0 +1,22 @@
+﻿/*.my-custom-scrollbar {
+    height: 350px;
+    overflow: auto;
+}
+
+.table {
+    cursor: pointer;
+}
+
+.card {
+    width: 300px;
+}
+
+#imgPersona {
+    max-height:200px !important;
+    object-fit:contain !important;
+}
+*/
+
+.table {
+    cursor: pointer;
+}

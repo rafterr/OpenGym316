@@ -1,0 +1,52 @@
+﻿@model List<Product>
+
+@*@{
+    var respuesta = TempData["ResponseDelete"] is null ? true:false;
+}*@
+<a class="btn btn-success mt-2" asp-action="Upsert"> <i class="bi bi bi-plus-lg"></i> Nuevo </a>
+<div class="text-center mt-2">
+    <table class="table" id="associatesTable">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var membership in Model)
+            {
+                <tr>
+                    <td>
+                        @membership.Id
+                    </td>
+                    <td>
+                        @membership.Name
+                    </td>
+                    <td>
+                        @membership.Price.ToString("c")
+                    </td>
+                    <td class="justify-content-around">
+                        <a asp-action="Delete" asp-route-membershipId="@membership.Id" class="fs-4 bi bi-trash link-danger" onclick="return confirm('Estas seguro?')"></a>
+                        <a asp-action="Upsert" asp-route-membershipId="@membership.Id" class="fs-4 bi bi-pencil link-warning"></a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+</div>
+
+@*@section Scripts{
+
+    <script>
+        function ready() {
+            var response = @respuesta;
+            if (!response) {
+                alert("No se pudo eliminar esta membresia");
+            }
+        }
+        ready();
+    </script>
+}*@

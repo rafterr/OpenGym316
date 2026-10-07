@@ -1,0 +1,80 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>3:16 Registro</title>
+    <!-- Bootstrap core CSS -->
+    <link href="~/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico" />
+    <style>
+        body {
+            background-color: #f5f5f5;
+        }
+    </style>
+    <!-- Custom styles for this template -->
+    @*    <link href="~/css/sidebars.css" rel="stylesheet">*@
+    <link rel="stylesheet" href="~/css/customStyles.css" type="text/css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.css" />
+    @RenderSection("Styles",required:false)
+
+</head>
+<body>
+    <div class="container-fluid overflow-hidden">
+        <div class="row vh-100 overflow-auto">
+            <div class="col-12 col-sm-3 col-xl-2 px-sm-2 px-0 bg-dark d-flex sticky-top">
+                <div class="d-flex flex-sm-column flex-row flex-grow-1 align-items-center align-items-sm-start px-3 pt-2 text-white">
+                    <a href="/" class="d-flex align-items-center pb-sm-3 mb-md-0 me-md-auto text-white text-decoration-none">
+                        <span class="fs-5">G<span class="d-none d-sm-inline">ym</span></span>
+                    </a>
+                    <ul class="nav nav-pills flex-sm-column flex-row flex-nowrap flex-shrink-1 flex-sm-grow-0 flex-grow-1 mb-sm-auto mb-0 justify-content-center align-items-center align-items-sm-start" id="menu">
+                        <li class="nav-item">
+                            <a class="nav-link px-sm-0 px-2 text-white @(ViewBag.Current == "Home" ? "active" : "")" aria-current="page" asp-controller="Home" asp-action="Index">
+                                <i class="fs-5 bi bi-house"></i><span class="ms-1 d-none d-sm-inline"> Home</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-sm-0 px-2 text-white @(ViewBag.Current == "Associate" ? "active" : "")" asp-controller="Associate" asp-action="Index">
+                                <i class="fs-5 bi bi-people"></i><span class="ms-1 d-none d-sm-inline"> Socios</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-sm-0 px-2 text-white @(ViewBag.Current == "Membership" ? "active" : "")" asp-controller="Membership" asp-action="Index">
+                                <i class="fs-5 bi-person-vcard"></i><span class="ms-1 d-none d-sm-inline"> Membresias</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-sm-0 px-2 text-white @(ViewBag.Current == "Payment" ? "active" : "")" asp-controller="Payment" asp-action="Index">
+                                <i class="fs-5 bi-currency-dollar"></i><span class="ms-1 d-none d-sm-inline"> Pagos</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <partial name="_LoginPartial1" />
+
+                </div>
+            </div>
+            <div class="col d-flex flex-column vh-100">
+                <main class="row overflow-auto">
+                    <div class="col pt-4">
+                        @RenderBody()
+                    </div>
+                </main>
+                @*       <footer class="row bg-light py-4 mt-auto">
+                <div class="col"> Footer content here... </div>
+                </footer>*@
+            </div>
+        </div>
+    </div>
+
+    @*    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+    *@
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/bootstrap/js/bootstrap.bundle.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.js"></script>
+    <script src="~/lib/sweetalert2/sweetalert2.all.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>
